@@ -16,10 +16,18 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/pokemon (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/pokemon')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body).toBeDefined();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        expect(Array.isArray(res.body.results)).toBe(true);
+      });
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

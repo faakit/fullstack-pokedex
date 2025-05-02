@@ -6,7 +6,7 @@ import {
   OnApplicationBootstrap,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PokemonService } from 'src/pokemon/pokemon.service';
+import { PokemonService } from '../pokemon/pokemon.service';
 import { Cache } from 'cache-manager';
 
 @Injectable()

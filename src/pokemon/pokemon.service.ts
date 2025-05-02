@@ -72,7 +72,9 @@ export class PokemonService {
 
   async findOne(
     idOrName: number | string,
-    options: { ignoreCache?: boolean } = { ignoreCache: false },
+    options: { ignoreCache?: boolean; isRetry?: boolean } = {
+      ignoreCache: false,
+    },
   ): Promise<SimplifiedPokemon> {
     this.logger.verbose(`Processing findOne for Pokemon: ${idOrName}`);
 
@@ -217,14 +219,20 @@ export class PokemonService {
         throw error;
       }
 
-      this.logger.log(`Retry to fetch Pokemon ${idOrName} from PokeAPI...`);
-      try {
-        return await this.findOne(idOrName, { ignoreCache: true });
-      } catch (retryError) {
-        throw new Error(
-          `Could not process data for Pokemon ${idOrName}, retry failed: ${retryError}`,
-        );
+      if (!options.isRetry) {
+        this.logger.log(`Retry to fetch Pokemon ${idOrName} from PokeAPI...`);
+        try {
+          return await this.findOne(idOrName, {
+            ignoreCache: true,
+            isRetry: true,
+          });
+        } catch (retryError) {
+          throw new Error(
+            `Could not process data for Pokemon ${idOrName}, retry failed: ${retryError}, ${(retryError as Error).stack}`,
+          );
+        }
       }
+      throw error;
     }
   }
 
