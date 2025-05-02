@@ -15,7 +15,8 @@ import {
 export class PokeapiService {
   private readonly logger = new Logger(PokeapiService.name);
 
-  private readonly pokeApiBaseUrl = 'https://pokeapi.co/api/v2';
+  private readonly pokeApiBaseUrl =
+    process.env.POKEAPI_BASE_URL || 'https://pokeapi.co/api/v2';
 
   constructor(private readonly httpService: HttpService) {}
 

@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PokeapiService } from './pokeapi/pokeapi.service';
 import { HttpModule } from '@nestjs/axios';
@@ -29,7 +27,7 @@ import { PokemonController } from './pokemon/pokemon.controller';
     HttpModule,
     ScheduleModule.forRoot(),
   ],
-  controllers: [AppController, PokemonController],
-  providers: [AppService, PokeapiService, TasksService, PokemonService],
+  controllers: [PokemonController],
+  providers: [PokeapiService, TasksService, PokemonService],
 })
 export class AppModule {}

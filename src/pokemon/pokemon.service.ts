@@ -2,8 +2,10 @@ import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PokeapiService } from '../pokeapi/pokeapi.service';
 import { PokemonListResponse, TypeDetail } from '../pokeapi/pokeapi.interfaces';
 import { Cache } from 'cache-manager';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
-interface SimplifiedPokemon {
+export interface SimplifiedPokemon {
   id: number;
   name: string;
   frontImage: string | null;
@@ -20,6 +22,7 @@ export class PokemonService {
   constructor(
     private readonly pokeapiService: PokeapiService,
     @Inject('CACHE_MANAGER') private readonly cacheManager: Cache,
+    private readonly httpService: HttpService,
   ) {}
 
   async findAll(
@@ -29,7 +32,7 @@ export class PokemonService {
       offset: 0,
     },
   ): Promise<PokemonListResponse> {
-    const { limit = 20, offset = 0 } = options;
+    const { limit = 10, offset = 0 } = options;
 
     this.logger.verbose(
       `Fetching Pokemon names with limit: ${limit}, offset: ${offset}`,
@@ -43,32 +46,27 @@ export class PokemonService {
 
     const cacheKey = `allPokemonNames`;
     const cachedPokemonNames = await this.cacheManager.get<string[]>(cacheKey);
-    if (cachedPokemonNames) {
-      pokemonNames = cachedPokemonNames.slice(offset, offset + limit);
-      this.logger.verbose(
-        `Found cached Pokemon names for limit: ${limit}, offset: ${offset}: ${JSON.stringify(
-          pokemonNames,
-        )}`,
+    if (!cachedPokemonNames) {
+      this.logger.warn(
+        `No cached Pokemon names found. Proceeding to fetch from PokeAPI.`,
       );
+      return await this.pokeapiService.fetchPokemonList(limit, offset);
     }
 
-    if (pokemonNames.length === 0) {
-      this.logger.warn(
-        `No Pokemon names found for limit: ${limit}, offset: ${offset}`,
-      );
-      return { count: 0, results: [], next: null, previous: null };
-    }
+    pokemonNames = cachedPokemonNames.slice(offset, offset + limit);
+    this.logger.verbose(
+      `Found cached Pokemon names for limit: ${limit}, offset: ${offset}: ${JSON.stringify(
+        pokemonNames,
+      )}`,
+    );
 
     return {
-      count: pokemonNames.length,
+      count: cachedPokemonNames?.length || 0,
       results: pokemonNames.map((name) => ({
         name,
-        url: `https://pokeapi.co/api/v2/pokemon/${name}`,
       })),
-      next: String(
-        offset + limit < pokemonNames.length ? offset + limit : null,
-      ),
-      previous: String(offset > 0 ? offset - limit : null),
+      next: String(offset + limit),
+      previous: String(offset - limit >= 0 ? offset - limit : 0),
     };
   }
 
@@ -168,16 +166,46 @@ export class PokemonService {
         region: regionName,
       };
 
-      if (!options.ignoreCache) {
-        const cacheKey = `pokemon:${idOrName}`;
+      const cacheKey = `pokemon:${idOrName}`;
+      const frontImageCacheKey = `pokemon:${idOrName}:frontImage`;
+      const backImageCacheKey = `pokemon:${idOrName}:backImage`;
 
-        await this.cacheManager.set(cacheKey, simplifiedPokemon);
-        this.logger.verbose(
-          `Cached Pokemon ${idOrName} with key ${cacheKey}: ${JSON.stringify(
-            simplifiedPokemon,
-          )}`,
+      await this.cacheManager.set(cacheKey, simplifiedPokemon);
+      this.logger.verbose(
+        `Cached Pokemon ${idOrName} with key ${cacheKey}: ${JSON.stringify(
+          simplifiedPokemon,
+        )}`,
+      );
+
+      const imagePromises: Promise<void>[] = [];
+
+      // Fetch and cache front image
+      if (simplifiedPokemon.frontImage) {
+        imagePromises.push(
+          this.fetchAndCacheImage(
+            simplifiedPokemon.frontImage,
+            frontImageCacheKey,
+            idOrName,
+            'front',
+          ),
         );
       }
+
+      // Fetch and cache back image
+      if (simplifiedPokemon.backImage) {
+        imagePromises.push(
+          this.fetchAndCacheImage(
+            simplifiedPokemon.backImage,
+            backImageCacheKey,
+            idOrName,
+            'back',
+          ),
+        );
+      }
+
+      // Wait for image fetching/caching to complete (optional, can run in background)
+      await Promise.allSettled(imagePromises);
+
       return simplifiedPokemon;
     } catch (error) {
       this.logger.error(
@@ -197,6 +225,47 @@ export class PokemonService {
           `Could not process data for Pokemon ${idOrName}, retry failed: ${retryError}`,
         );
       }
+    }
+  }
+
+  async getImage(
+    idOrName: number | string,
+    imageType: 'front' | 'back',
+  ): Promise<Buffer> {
+    const cacheKey = `pokemon:${idOrName}:${imageType}Image`;
+    const cachedImage = await this.cacheManager.get<Buffer>(cacheKey);
+    if (cachedImage) {
+      this.logger.verbose(
+        `Found cached ${imageType} image for ${idOrName}: ${cachedImage.byteLength} bytes`,
+      );
+      return cachedImage;
+    }
+
+    this.logger.warn(
+      `No cached ${imageType} image found for ${idOrName}. Proceeding to fetch from PokeAPI.`,
+    );
+    throw new NotFoundException(`No cached image found for ${idOrName}`);
+  }
+
+  private async fetchAndCacheImage(
+    imageUrl: string,
+    cacheKey: string,
+    pokemonIdOrName: string | number,
+    imageType: 'front' | 'back',
+  ): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(imageUrl, { responseType: 'arraybuffer' }),
+      );
+      const imageData = Buffer.from(response.data);
+      await this.cacheManager.set(cacheKey, imageData);
+      this.logger.verbose(
+        `Cached ${imageType} image binary for ${pokemonIdOrName} with key ${cacheKey} (${imageData.byteLength} bytes)`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch or cache ${imageType} image from ${imageUrl} for ${pokemonIdOrName}: ${(error as Error).message}`,
+      );
     }
   }
 }
