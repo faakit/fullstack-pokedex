@@ -161,8 +161,12 @@ export class PokemonService {
       const simplifiedPokemon: SimplifiedPokemon = {
         id: pokemonDetails.id,
         name: pokemonDetails.name,
-        frontImage: pokemonDetails.sprites.front_default,
-        backImage: pokemonDetails.sprites.back_default,
+        frontImage: pokemonDetails.sprites.front_default
+          ? `${process.env.API_URL}/pokemon/${idOrName}/front-image`
+          : null,
+        backImage: pokemonDetails.sprites.back_default
+          ? `${process.env.API_URL}/pokemon/${idOrName}/back-image`
+          : null,
         types: pokemonDetails.types.map((typeInfo) => typeInfo.type.name),
         weaknesses: actualWeaknesses,
         region: regionName,
@@ -182,10 +186,10 @@ export class PokemonService {
       const imagePromises: Promise<void>[] = [];
 
       // Fetch and cache front image
-      if (simplifiedPokemon.frontImage) {
+      if (pokemonDetails.sprites.front_default) {
         imagePromises.push(
           this.fetchAndCacheImage(
-            simplifiedPokemon.frontImage,
+            pokemonDetails.sprites.front_default,
             frontImageCacheKey,
             idOrName,
             'front',
@@ -194,10 +198,10 @@ export class PokemonService {
       }
 
       // Fetch and cache back image
-      if (simplifiedPokemon.backImage) {
+      if (pokemonDetails.sprites.back_default) {
         imagePromises.push(
           this.fetchAndCacheImage(
-            simplifiedPokemon.backImage,
+            pokemonDetails.sprites.back_default,
             backImageCacheKey,
             idOrName,
             'back',
