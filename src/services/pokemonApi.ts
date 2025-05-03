@@ -1,4 +1,3 @@
-// Types for API responses
 export interface PokemonListResponse {
   count: number
   results: { name: string }[]
@@ -119,5 +118,4 @@ export class PokemonApi {
   }
 }
 
-// Export a singleton instance for easy import
 export const pokemonApi = new PokemonApi()

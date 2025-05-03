@@ -22,15 +22,13 @@ function App() {
 
   const { ref, inView } = useInView({
     threshold: 0,
-    triggerOnce: false // Keep triggering as the element comes into view
+    triggerOnce: false
   })
 
-  // Initial fetch
   useEffect(() => {
     fetchInitialList()
   }, [])
 
-  // Infinite scroll fetch
   useEffect(() => {
     if (inView && !isLoadingList && nextOffset && pokemonList.length < count) {
       console.log('Fetching next page, offset:', currentOffset.current)
@@ -50,7 +48,6 @@ function App() {
       setSelectedPokemon(pokemon)
       setIsModalOpen(true)
     } else {
-      // Optionally handle cases where details are still loading or failed
       console.log('Details not available yet for', pokemon.name)
     }
   }
@@ -81,14 +78,13 @@ function App() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {pokemonList.map((pokemon, index) => (
             <PokemonCard
-              key={pokemon.name + index} // Use index if names can repeat across fetches before details arrive
+              key={pokemon.name + index}
               pokemon={pokemon}
               onClick={() => handleCardClick(pokemon)}
             />
           ))}
         </div>
 
-        {/* Intersection Observer Target */}
         {nextOffset && pokemonList.length < count && (
           <div ref={ref} className="mt-8 flex h-16 items-center justify-center">
             {isLoadingList && (
