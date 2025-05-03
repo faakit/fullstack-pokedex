@@ -61,44 +61,60 @@ function App() {
   }
 
   return (
-    <div className="container mx-auto min-h-screen bg-gray-100 p-4">
-      <h1 className="my-6 text-center text-4xl font-bold text-blue-600">
-        Pokédex
-      </h1>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-100">
+      <div className="container mx-auto p-4 pb-12">
+        <header className="mb-8 pt-8">
+          <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-5xl font-bold text-transparent">
+            Pokédex
+          </h1>
+          <p className="mt-2 text-center text-gray-600">
+            Gotta catch &apos;em all!
+          </p>
+        </header>
 
-      {error && (
-        <div className="mb-4 text-center text-red-500">Error: {error}</div>
-      )}
+        {error && (
+          <div className="mb-6 rounded-lg bg-red-50 p-4 text-center text-red-500 shadow-sm">
+            Error: {error}
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {pokemonList.map((pokemon, index) => (
-          <PokemonCard
-            key={pokemon.name + index} // Use index if names can repeat across fetches before details arrive
-            pokemon={pokemon}
-            onClick={() => handleCardClick(pokemon)}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {pokemonList.map((pokemon, index) => (
+            <PokemonCard
+              key={pokemon.name + index} // Use index if names can repeat across fetches before details arrive
+              pokemon={pokemon}
+              onClick={() => handleCardClick(pokemon)}
+            />
+          ))}
+        </div>
+
+        {/* Intersection Observer Target */}
+        {nextOffset && pokemonList.length < count && (
+          <div ref={ref} className="mt-8 flex h-16 items-center justify-center">
+            {isLoadingList && (
+              <div className="flex items-center gap-2">
+                <div className="size-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                <p className="text-blue-600">Loading more Pokémon...</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!nextOffset &&
+          pokemonList.length > 0 &&
+          pokemonList.length >= count && (
+            <div className="mt-8 text-center text-lg font-medium text-purple-600">
+              You&apos;ve caught &apos;em all!
+            </div>
+          )}
+
+        {isModalOpen && selectedPokemon?.details && (
+          <PokemonModal
+            pokemonDetails={selectedPokemon.details}
+            onClose={handleCloseModal}
           />
-        ))}
+        )}
       </div>
-
-      {/* Intersection Observer Target */}
-      {nextOffset && pokemonList.length < count && (
-        <div ref={ref} className="flex h-10 items-center justify-center">
-          {isLoadingList && <p>Loading more Pokémon...</p>}
-        </div>
-      )}
-
-      {!nextOffset && pokemonList.length > 0 && pokemonList.length >= count && (
-        <div className="mt-6 text-center text-gray-500">
-          You&apos;ve caught &apos;em all!
-        </div>
-      )}
-
-      {isModalOpen && selectedPokemon?.details && (
-        <PokemonModal
-          pokemonDetails={selectedPokemon.details}
-          onClose={handleCloseModal}
-        />
-      )}
     </div>
   )
 }
