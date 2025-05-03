@@ -1,98 +1,158 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## Project Overview
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This is a NestJS backend service designed to interact with the PokeAPI. It provides endpoints to retrieve Pokémon data and their images, utilizing caching mechanisms for performance optimization and scheduled tasks for potential background operations.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
 
-## Description
+Before you begin, ensure you have the following installed:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+*   [Node.js](https://nodejs.org/) (LTS version recommended)
+*   [npm](https://www.npmjs.com/) (usually comes with Node.js)
+*   [Redis](https://redis.io/) (if using Redis for caching, ensure it's running and accessible)
 
-## Project setup
+## Installation
 
-```bash
-$ npm install
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd backend
+    ```
+2.  Install the dependencies:
+    ```bash
+    npm install
+    ```
+
+## Running the Application
+
+*   **Development Mode (with watch):**
+    ```bash
+    npm run start:dev
+    ```
+    The application will start on the port specified by the `PORT` environment variable (defaulting to 3000) and automatically restart on file changes.
+
+*   **Production Mode:**
+    First, build the application:
+    ```bash
+    npm run build
+    ```
+    Then, start the application:
+    ```bash
+    npm run start:prod
+    ```
+
+*   **Debugging Mode:**
+    ```bash
+    npm run start:debug
+    ```
+
+## Running Tests
+
+*   **Unit Tests:**
+    ```bash
+    npm run test
+    ```
+    To run in watch mode:
+    ```bash
+    npm run test:watch
+    ```
+    To generate coverage report:
+    ```bash
+    npm run test:cov
+    ```
+
+*   **End-to-End (E2E) Tests:**
+    ```bash
+    npm run test:e2e
+    ```
+
+## Linting and Formatting
+
+*   **Linting:** Check for code style issues and potential errors.
+    ```bash
+    npm run lint
+    ```
+    This command will also attempt to fix fixable issues.
+
+*   **Formatting:** Format the code using Prettier.
+    ```bash
+    npm run format
+    ```
+
+## Project Structure
+
+```
+.
+├── dist/                               # Compiled JavaScript code (after build)
+├── docs/                               # Project documentation
+│   └── README.md                       # This file
+├── node_modules/                       # Project dependencies
+├── src/                                # Source code
+│   ├── app.module.ts                   # Root application module
+│   ├── main.ts                         # Application entry point
+│   ├── pokeapi/                        # Module for interacting with PokeAPI
+│   │   ├── pokeapi.interfaces.ts       # Interfaces for PokeAPI data
+│   │   ├── pokeapi.service.spec.ts     # Unit tests for PokeapiService
+│   │   └── pokeapi.service.ts          # Service for PokeAPI calls
+│   ├── pokemon/                        # Module for Pokémon features
+│   │   ├── pokemon.controller.spec.ts  # Unit tests for PokemonController
+│   │   ├── pokemon.controller.ts       # Controller handling Pokémon API requests
+│   │   ├── pokemon.service.spec.ts     # Unit tests for PokemonService
+│   │   └── pokemon.service.ts          # Service for Pokémon business logic
+│   └── tasks/                          # Module for scheduled tasks
+│       └── tasks.service.ts            # Service containing scheduled jobs
+├── test/                               # End-to-end tests
+│   ├── app.e2e-spec.ts                 # Main E2E test file
+│   └── jest-e2e.json                   # Jest configuration for E2E tests
+├── .eslintrc.js                        # ESLint configuration
+├── .prettierrc                         # Prettier configuration (if present)
+├── nest-cli.json                       # NestJS CLI configuration
+├── package.json                        # Project metadata and dependencies
+├── README.md                           # Top-level README (consider adding a link here to docs/README.md)
+├── tsconfig.build.json                 # TypeScript configuration for building
+└── tsconfig.json                       # Base TypeScript configuration
 ```
 
-## Compile and run the project
+## API Endpoints
 
-```bash
-# development
-$ npm run start
+The service exposes the following endpoints under the `/pokemon` route:
 
-# watch mode
-$ npm run start:dev
+*   **`GET /pokemon`**: Retrieves a list of Pokémon.
+    *   Query Parameters:
+        *   `limit` (number, optional, default: 10): Number of Pokémon to retrieve.
+        *   `offset` (number, optional, default: 0): Number of Pokémon to skip.
+    *   Response: An array of Pokémon summary objects.
 
-# production mode
-$ npm run start:prod
-```
+*   **`GET /pokemon/:id`**: Retrieves detailed information for a specific Pokémon by its ID or name.
+    *   Path Parameter:
+        *   `id` (string): The ID or name of the Pokémon.
+    *   Response: A detailed Pokémon object.
 
-## Run tests
+*   **`GET /pokemon/:id/front-image`**: Retrieves the front sprite image for a specific Pokémon.
+    *   Path Parameter:
+        *   `id` (string): The ID or name of the Pokémon.
+    *   Response: A PNG image file.
 
-```bash
-# unit tests
-$ npm run test
+*   **`GET /pokemon/:id/back-image`**: Retrieves the back sprite image for a specific Pokémon.
+    *   Path Parameter:
+        *   `id` (string): The ID or name of the Pokémon.
+    *   Response: A PNG image file.
 
-# e2e tests
-$ npm run test:e2e
+## Caching
 
-# test coverage
-$ npm run test:cov
-```
+The application utilizes a multi-layer caching strategy configured in `app.module.ts`:
 
-## Deployment
+1.  **In-Memory Cache:** A fast, short-term cache (`CacheableMemory`) with a Time-To-Live (TTL) of 5 hours.
+2.  **Redis Cache:** A persistent cache using Redis, configured via the `REDIS_URL` environment variable.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Requests for Pokémon data and images are cached to reduce load on the external PokeAPI and improve response times. The `CacheModule` from `@nestjs/cache-manager` and `@keyv/redis` are used for implementation.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Scheduled Tasks
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+The `TasksService` (`src/tasks/tasks.service.ts`) uses the `@nestjs/schedule` module. Currently, it includes a task to pre-warm the cache by fetching the all Pokémon on application startup.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Environment Variables
 
-## Resources
+The following environment variables can be configured
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+*   `PORT`: The port number the application will listen on (default: `3000`).
+*   `REDIS_URL`: The connection URL for the Redis instance (e.g., `redis://localhost:6379`). Required if using Redis caching.
