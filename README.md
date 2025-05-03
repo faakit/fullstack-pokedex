@@ -155,4 +155,6 @@ The `TasksService` (`src/tasks/tasks.service.ts`) uses the `@nestjs/schedule` mo
 The following environment variables can be configured
 
 *   `PORT`: The port number the application will listen on (default: `3000`).
-*   `REDIS_URL`: The connection URL for the Redis instance (e.g., `redis://localhost:6379`). Required if using Redis caching.
+*   `REDIS_URL`: The connection URL for the Redis instance (e.g., `redis://localhost:6379`).
+*   `POKEAPI_BASE_URL`: Base URL for the PokeApi
+*   `API_URL`: The API url.
