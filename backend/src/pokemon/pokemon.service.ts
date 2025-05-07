@@ -13,6 +13,10 @@ export interface SimplifiedPokemon {
   types: string[];
   weaknesses: string[];
   region: string | null;
+  originalImages: {
+    front: string | null;
+    back: string | null;
+  };
 }
 
 @Injectable()
@@ -41,7 +45,11 @@ export class PokemonService {
     let pokemonNames: string[] = [];
 
     if (options.ignoreCache) {
-      return await this.pokeapiService.fetchPokemonList(limit, offset);
+      return {
+        ...(await this.pokeapiService.fetchPokemonList(limit, offset)),
+        next: String(offset + limit),
+        previous: String(offset - limit >= 0 ? offset - limit : 0),
+      };
     }
 
     const cacheKey = `allPokemonNames`;
@@ -50,7 +58,11 @@ export class PokemonService {
       this.logger.warn(
         `No cached Pokemon names found. Proceeding to fetch from PokeAPI.`,
       );
-      return await this.pokeapiService.fetchPokemonList(limit, offset);
+      return {
+        ...(await this.pokeapiService.fetchPokemonList(limit, offset)),
+        next: String(offset + limit),
+        previous: String(offset - limit >= 0 ? offset - limit : 0),
+      };
     }
 
     pokemonNames = cachedPokemonNames.slice(offset, offset + limit);
@@ -161,6 +173,10 @@ export class PokemonService {
       const simplifiedPokemon: SimplifiedPokemon = {
         id: pokemonDetails.id,
         name: pokemonDetails.name,
+        originalImages: {
+          front: pokemonDetails.sprites.front_default,
+          back: pokemonDetails.sprites.back_default,
+        },
         frontImage: pokemonDetails.sprites.front_default
           ? `${process.env.API_URL}/pokemon/${idOrName}/front-image`
           : null,
@@ -183,9 +199,8 @@ export class PokemonService {
         )}`,
       );
 
-      const imagePromises: Promise<void>[] = [];
+      const imagePromises: Promise<void | Buffer>[] = [];
 
-      // Fetch and cache front image
       if (pokemonDetails.sprites.front_default) {
         imagePromises.push(
           this.fetchAndCacheImage(
@@ -197,7 +212,6 @@ export class PokemonService {
         );
       }
 
-      // Fetch and cache back image
       if (pokemonDetails.sprites.back_default) {
         imagePromises.push(
           this.fetchAndCacheImage(
@@ -209,7 +223,6 @@ export class PokemonService {
         );
       }
 
-      // Wait for image fetching/caching to complete (optional, can run in background)
       await Promise.allSettled(imagePromises);
 
       return simplifiedPokemon;
@@ -256,6 +269,35 @@ export class PokemonService {
     this.logger.warn(
       `No cached ${imageType} image found for ${idOrName}. Proceeding to fetch from PokeAPI.`,
     );
+
+    let pokemon: SimplifiedPokemon | undefined;
+
+    try {
+      pokemon = await this.findOne(idOrName);
+    } catch (error) {
+      this.logger.error(
+        `Error fetching Pokemon ${idOrName} for image retrieval: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
+    }
+
+    if (pokemon?.originalImages[`${imageType}`]) {
+      const imageUrl = pokemon.originalImages[`${imageType}`]!;
+      const image = await this.fetchAndCacheImage(
+        imageUrl,
+        cacheKey,
+        idOrName,
+        imageType,
+      );
+
+      if (image) {
+        this.logger.verbose(
+          `Fetched and cached ${imageType} image for ${idOrName}: ${image.byteLength} bytes`,
+        );
+        return image;
+      }
+    }
+
     throw new NotFoundException(`No cached image found for ${idOrName}`);
   }
 
@@ -264,7 +306,7 @@ export class PokemonService {
     cacheKey: string,
     pokemonIdOrName: string | number,
     imageType: 'front' | 'back',
-  ): Promise<void> {
+  ): Promise<Buffer | undefined> {
     try {
       const response = await firstValueFrom(
         this.httpService.get(imageUrl, { responseType: 'arraybuffer' }),
@@ -274,6 +316,7 @@ export class PokemonService {
       this.logger.verbose(
         `Cached ${imageType} image binary for ${pokemonIdOrName} with key ${cacheKey} (${imageData.byteLength} bytes)`,
       );
+      return imageData;
     } catch (error) {
       this.logger.error(
         `Failed to fetch or cache ${imageType} image from ${imageUrl} for ${pokemonIdOrName}: ${(error as Error).message}`,

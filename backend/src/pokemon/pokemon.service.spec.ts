@@ -106,8 +106,8 @@ describe('PokemonService', () => {
       id: 25,
       name: 'pikachu',
       sprites: {
-        front_default: 'front_url',
-        back_default: 'back_url',
+        front_default: 'original_front_url',
+        back_default: 'original_back_url',
       },
       types: [
         { slot: 1, type: { name: 'electric', url: 'type_electric_url' } },
@@ -133,6 +133,10 @@ describe('PokemonService', () => {
       name: 'pikachu',
       frontImage: 'front_url',
       backImage: 'back_url',
+      originalImages: {
+        front: 'original_front_url',
+        back: 'original_back_url',
+      },
       types: ['electric'],
       weaknesses: ['ground'],
       region: 'kanto',
@@ -157,6 +161,12 @@ describe('PokemonService', () => {
     });
 
     it('should fetch from API, calculate details, cache, and return data if not found in cache', async () => {
+      const expectedPokemon = {
+        ...mockSimplifiedPokemon,
+        backImage: `${process.env.API_URL}/pokemon/pikachu/back-image`,
+        frontImage: `${process.env.API_URL}/pokemon/pikachu/front-image`,
+      };
+
       (cacheManager.get as jest.Mock).mockResolvedValue(undefined);
       (cacheManager.get as jest.Mock)
         .mockResolvedValueOnce(undefined)
@@ -193,15 +203,12 @@ describe('PokemonService', () => {
       expect(mockPokeapiService.fetchGenerationDetails).toHaveBeenCalledWith(
         'gen_1_url',
       );
-      expect(cacheManager.set).toHaveBeenCalledWith(
-        cacheKey,
-        mockSimplifiedPokemon,
-      );
+      expect(cacheManager.set).toHaveBeenCalledWith(cacheKey, expectedPokemon);
 
-      expect(mockHttpService.get).toHaveBeenCalledWith('front_url', {
+      expect(mockHttpService.get).toHaveBeenCalledWith('original_front_url', {
         responseType: 'arraybuffer',
       });
-      expect(mockHttpService.get).toHaveBeenCalledWith('back_url', {
+      expect(mockHttpService.get).toHaveBeenCalledWith('original_back_url', {
         responseType: 'arraybuffer',
       });
       expect(cacheManager.set).toHaveBeenCalledWith(
@@ -212,19 +219,24 @@ describe('PokemonService', () => {
         backImageCacheKey,
         mockImageBuffer,
       );
-      expect(result).toEqual(mockSimplifiedPokemon);
+      expect(result).toEqual(expectedPokemon);
     });
 
     it('should fetch from API and handle missing optional data (back image, region)', async () => {
       const detailsWithoutOptional = {
         ...mockPokemonDetails,
-        sprites: { front_default: 'front_url', back_default: null },
+        sprites: { front_default: 'original_front_url', back_default: null },
       };
       const speciesWithoutGen = { generation: null };
       const simplifiedWithoutOptional = {
         ...mockSimplifiedPokemon,
+        frontImage: `${process.env.API_URL}/pokemon/pikachu/front-image`,
         backImage: null,
         region: null,
+        originalImages: {
+          front: 'original_front_url',
+          back: null,
+        },
       };
 
       (cacheManager.get as jest.Mock).mockResolvedValue(undefined);
@@ -259,7 +271,7 @@ describe('PokemonService', () => {
         simplifiedWithoutOptional,
       );
       expect(mockHttpService.get).toHaveBeenCalledTimes(1);
-      expect(mockHttpService.get).toHaveBeenCalledWith('front_url', {
+      expect(mockHttpService.get).toHaveBeenCalledWith('original_front_url', {
         responseType: 'arraybuffer',
       });
       expect(cacheManager.set).toHaveBeenCalledWith(
@@ -291,6 +303,12 @@ describe('PokemonService', () => {
     });
 
     it('should retry fetch if initial API call fails with a generic error, then succeed', async () => {
+      const expectedPokemon = {
+        ...mockSimplifiedPokemon,
+        backImage: `${process.env.API_URL}/pokemon/pikachu/back-image`,
+        frontImage: `${process.env.API_URL}/pokemon/pikachu/front-image`,
+      };
+
       (cacheManager.get as jest.Mock).mockResolvedValue(undefined);
       const genericError = new Error('Network Error');
 
@@ -328,10 +346,7 @@ describe('PokemonService', () => {
       expect(mockPokeapiService.fetchGenerationDetails).toHaveBeenCalledWith(
         'gen_1_url',
       );
-      expect(cacheManager.set).toHaveBeenCalledWith(
-        cacheKey,
-        mockSimplifiedPokemon,
-      );
+      expect(cacheManager.set).toHaveBeenCalledWith(cacheKey, expectedPokemon);
       expect(cacheManager.set).toHaveBeenCalledWith(
         frontImageCacheKey,
         mockImageBuffer,
@@ -340,7 +355,7 @@ describe('PokemonService', () => {
         backImageCacheKey,
         mockImageBuffer,
       );
-      expect(result).toEqual(mockSimplifiedPokemon);
+      expect(result).toEqual(expectedPokemon);
     });
 
     it('should throw an error if initial API call and retry both fail', async () => {
@@ -361,6 +376,12 @@ describe('PokemonService', () => {
     });
 
     it('should ignore cache and fetch from API when ignoreCache option is true', async () => {
+      const expectedPokemon = {
+        ...mockSimplifiedPokemon,
+        backImage: `${process.env.API_URL}/pokemon/pikachu/back-image`,
+        frontImage: `${process.env.API_URL}/pokemon/pikachu/front-image`,
+      };
+
       (cacheManager.get as jest.Mock).mockResolvedValue(mockSimplifiedPokemon);
       mockPokeapiService.fetchPokemonDetails.mockResolvedValue(
         mockPokemonDetails,
@@ -392,10 +413,7 @@ describe('PokemonService', () => {
       expect(mockPokeapiService.fetchGenerationDetails).toHaveBeenCalledWith(
         'gen_1_url',
       );
-      expect(cacheManager.set).toHaveBeenCalledWith(
-        cacheKey,
-        mockSimplifiedPokemon,
-      );
+      expect(cacheManager.set).toHaveBeenCalledWith(cacheKey, expectedPokemon);
       expect(cacheManager.set).toHaveBeenCalledWith(
         frontImageCacheKey,
         mockImageBuffer,
@@ -404,7 +422,7 @@ describe('PokemonService', () => {
         backImageCacheKey,
         mockImageBuffer,
       );
-      expect(result).toEqual(mockSimplifiedPokemon);
+      expect(result).toEqual(expectedPokemon);
     });
   });
 
@@ -441,7 +459,11 @@ describe('PokemonService', () => {
         limit,
         offset,
       );
-      expect(result).toEqual(mockPokemonListResponse);
+      expect(result).toEqual({
+        ...mockPokemonListResponse,
+        next: String(offset + limit),
+        previous: String(offset - limit >= 0 ? offset - limit : 0),
+      });
     });
 
     it('should fetch from API if cache is empty', async () => {
@@ -459,7 +481,11 @@ describe('PokemonService', () => {
         limit,
         offset,
       );
-      expect(result).toEqual(mockPokemonListResponse);
+      expect(result).toEqual({
+        ...mockPokemonListResponse,
+        next: String(offset + limit),
+        previous: String(offset - limit >= 0 ? offset - limit : 0),
+      });
     });
 
     it('should return sliced data from cache if found', async () => {

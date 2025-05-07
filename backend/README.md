@@ -6,9 +6,9 @@ This is a NestJS backend service designed to interact with the PokeAPI. It provi
 
 Before you begin, ensure you have the following installed:
 
-*   [Node.js](https://nodejs.org/) (LTS version recommended)
-*   [npm](https://www.npmjs.com/) (usually comes with Node.js)
-*   [Redis](https://redis.io/) (if using Redis for caching, ensure it's running and accessible)
+- [Node.js](https://nodejs.org/) (LTS version recommended)
+- [npm](https://www.npmjs.com/) (usually comes with Node.js)
+- [Redis](https://redis.io/) (if using Redis for caching, ensure it's running and accessible)
 
 ## Installation
 
@@ -24,59 +24,71 @@ Before you begin, ensure you have the following installed:
 
 ## Running the Application
 
-*   **Development Mode (with watch):**
-    ```bash
-    npm run start:dev
-    ```
-    The application will start on the port specified by the `PORT` environment variable (defaulting to 3000) and automatically restart on file changes.
+- **Development Mode (with watch):**
 
-*   **Production Mode:**
-    First, build the application:
-    ```bash
-    npm run build
-    ```
-    Then, start the application:
-    ```bash
-    npm run start:prod
-    ```
+  ```bash
+  npm run start:dev
+  ```
 
-*   **Debugging Mode:**
-    ```bash
-    npm run start:debug
-    ```
+  The application will start on the port specified by the `PORT` environment variable (defaulting to 3000) and automatically restart on file changes.
+
+- **Production Mode:**
+  First, build the application:
+
+  ```bash
+  npm run build
+  ```
+
+  Then, start the application:
+
+  ```bash
+  npm run start:prod
+  ```
+
+- **Debugging Mode:**
+  ```bash
+  npm run start:debug
+  ```
 
 ## Running Tests
 
-*   **Unit Tests:**
-    ```bash
-    npm run test
-    ```
-    To run in watch mode:
-    ```bash
-    npm run test:watch
-    ```
-    To generate coverage report:
-    ```bash
-    npm run test:cov
-    ```
+- **Unit Tests:**
 
-*   **End-to-End (E2E) Tests:**
-    ```bash
-    npm run test:e2e
-    ```
+  ```bash
+  npm run test
+  ```
+
+  To run in watch mode:
+
+  ```bash
+  npm run test:watch
+  ```
+
+  To generate coverage report:
+
+  ```bash
+  npm run test:cov
+  ```
+
+- **End-to-End (E2E) Tests:**
+  ```bash
+  npm run test:e2e
+  ```
 
 ## Linting and Formatting
 
-*   **Linting:** Check for code style issues and potential errors.
-    ```bash
-    npm run lint
-    ```
-    This command will also attempt to fix fixable issues.
+- **Linting:** Check for code style issues and potential errors.
 
-*   **Formatting:** Format the code using Prettier.
-    ```bash
-    npm run format
-    ```
+  ```bash
+  npm run lint
+  ```
+
+  This command will also attempt to fix fixable issues.
+
+- **Formatting:** Format the code using Prettier.
+  ```bash
+  npm run format
+  ```
 
 ## Project Structure
 
@@ -116,32 +128,35 @@ Before you begin, ensure you have the following installed:
 
 The service exposes the following endpoints under the `/pokemon` route:
 
-*   **`GET /pokemon`**: Retrieves a list of Pokémon.
-    *   Query Parameters:
-        *   `limit` (number, optional, default: 10): Number of Pokémon to retrieve.
-        *   `offset` (number, optional, default: 0): Number of Pokémon to skip.
-    *   Response: An array of Pokémon summary objects.
+- **`GET /pokemon`**: Retrieves a list of Pokémon.
 
-*   **`GET /pokemon/:id`**: Retrieves detailed information for a specific Pokémon by its ID or name.
-    *   Path Parameter:
-        *   `id` (string): The ID or name of the Pokémon.
-    *   Response: A detailed Pokémon object.
+  - Query Parameters:
+    - `limit` (number, optional, default: 10): Number of Pokémon to retrieve.
+    - `offset` (number, optional, default: 0): Number of Pokémon to skip.
+  - Response: An array of Pokémon summary objects.
 
-*   **`GET /pokemon/:id/front-image`**: Retrieves the front sprite image for a specific Pokémon.
-    *   Path Parameter:
-        *   `id` (string): The ID or name of the Pokémon.
-    *   Response: A PNG image file.
+- **`GET /pokemon/:id`**: Retrieves detailed information for a specific Pokémon by its ID or name.
 
-*   **`GET /pokemon/:id/back-image`**: Retrieves the back sprite image for a specific Pokémon.
-    *   Path Parameter:
-        *   `id` (string): The ID or name of the Pokémon.
-    *   Response: A PNG image file.
+  - Path Parameter:
+    - `id` (string): The ID or name of the Pokémon.
+  - Response: A detailed Pokémon object.
+
+- **`GET /pokemon/:id/front-image`**: Retrieves the front sprite image for a specific Pokémon.
+
+  - Path Parameter:
+    - `id` (string): The ID or name of the Pokémon.
+  - Response: A PNG image file.
+
+- **`GET /pokemon/:id/back-image`**: Retrieves the back sprite image for a specific Pokémon.
+  - Path Parameter:
+    - `id` (string): The ID or name of the Pokémon.
+  - Response: A PNG image file.
 
 ## Caching
 
 The application utilizes a multi-layer caching strategy configured in `app.module.ts`:
 
-1.  **In-Memory Cache:** A fast, short-term cache (`CacheableMemory`) with a Time-To-Live (TTL) of 5 hours.
+1.  **In-Memory Cache:** A fast, short-term cache (`CacheableMemory`).
 2.  **Redis Cache:** A persistent cache using Redis, configured via the `REDIS_URL` environment variable.
 
 Requests for Pokémon data and images are cached to reduce load on the external PokeAPI and improve response times. The `CacheModule` from `@nestjs/cache-manager` and `@keyv/redis` are used for implementation.
@@ -149,12 +164,15 @@ Requests for Pokémon data and images are cached to reduce load on the external 
 ## Scheduled Tasks
 
 The `TasksService` (`src/tasks/tasks.service.ts`) uses the `@nestjs/schedule` module. Currently, it includes a task to pre-warm the cache by fetching the all Pokémon on application startup.
+The service will fetch the PokeApi in batches that are configurable via environment variable `POKEMON_CACHING_BATCH_SIZE`
 
 ## Environment Variables
 
 The following environment variables can be configured
 
-*   `PORT`: The port number the application will listen on (default: `3000`).
-*   `REDIS_URL`: The connection URL for the Redis instance (e.g., `redis://localhost:6379`).
-*   `POKEAPI_BASE_URL`: Base URL for the PokeApi
-*   `API_URL`: The API url.
+- `PORT`: The port number the application will listen on (default: `3000`).
+- `REDIS_URL`: The connection URL for the Redis instance (e.g., `redis://localhost:6379`).
+- `POKEAPI_BASE_URL`: Base URL for the PokeApi
+- `API_URL`: The API url.
+- `POKEMON_CACHING_BATCH_SIZE`: The batch size for pre-warming the cache (default: `10` if not set).
+- `LOG_LEVEL`: The log level for the application (default: `info` if not set).

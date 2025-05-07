@@ -18,14 +18,17 @@ import { ConfigModule } from '@nestjs/config';
     }),
     CacheModule.registerAsync({
       useFactory: () => {
-        return {
-          stores: [
-            new Keyv({
-              store: new CacheableMemory({ ttl: 60 * 60 * 5 }),
-            }),
-            createKeyv(process.env.REDIS_URL),
-          ],
-        };
+        const stores = [
+          new Keyv({
+            store: new CacheableMemory({ ttl: 60 * 60 * 5 }),
+          }),
+        ];
+
+        if (process.env.REDIS_URL) {
+          stores.push(createKeyv(process.env.REDIS_URL));
+        }
+
+        return { stores };
       },
     }),
     HttpModule,
