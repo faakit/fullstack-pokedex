@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import usePokemonStore, { PokemonListItem } from './hooks/usePokemonStore'
 import PokemonCard from './components/PokemonCard'
 import PokemonModal from './components/PokemonModal'
@@ -18,8 +18,6 @@ function App() {
   const [selectedPokemon, setSelectedPokemon] =
     useState<PokemonListItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const currentOffset = useRef(0)
-
   const { ref, inView } = useInView({
     threshold: 0,
     triggerOnce: false
@@ -31,7 +29,6 @@ function App() {
 
   useEffect(() => {
     if (inView && !isLoadingList && nextOffset && pokemonList.length < count) {
-      console.log('Fetching next page, offset:', currentOffset.current)
       fetchNextListItems()
     }
   }, [

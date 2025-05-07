@@ -60,13 +60,13 @@ const usePokemonStore = create<PokemonState>((set, get) => ({
       })
 
       // Fetch details for each pokemon concurrently
-      initialList.forEach(async (item, index) => {
+      initialList.forEach(async (item) => {
         try {
           const details = await pokemonApi.getPokemonDetail(item.name)
 
           set((state) => ({
-            pokemonList: state.pokemonList.map((pokemon, i) =>
-              i === index
+            pokemonList: state.pokemonList.map((pokemon) =>
+              pokemon.name === item.name
                 ? {
                     ...pokemon,
                     details,
@@ -80,8 +80,8 @@ const usePokemonStore = create<PokemonState>((set, get) => ({
           console.error(`Error fetching details for ${item.name}:`, error)
 
           set((state) => ({
-            pokemonList: state.pokemonList.map((pokemon, i) =>
-              i === index
+            pokemonList: state.pokemonList.map((pokemon) =>
+              pokemon.name === item.name
                 ? {
                     ...pokemon,
                     isLoadingDetails: false,
@@ -135,13 +135,13 @@ const usePokemonStore = create<PokemonState>((set, get) => ({
       }))
 
       // Fetch details for each new pokemon concurrently
-      newItems.forEach(async (item, index) => {
+      newItems.forEach(async (item) => {
         try {
           const details = await pokemonApi.getPokemonDetail(item.name)
 
           set((state) => ({
-            pokemonList: state.pokemonList.map((pokemon, i) =>
-              i === index + state.pokemonList.length - newItems.length
+            pokemonList: state.pokemonList.map((pokemon) =>
+              pokemon.name === item.name
                 ? {
                     ...pokemon,
                     details,
@@ -155,8 +155,8 @@ const usePokemonStore = create<PokemonState>((set, get) => ({
           console.error(`Error fetching details for ${item.name}:`, error)
 
           set((state) => ({
-            pokemonList: state.pokemonList.map((pokemon, i) =>
-              i === index + state.pokemonList.length - newItems.length
+            pokemonList: state.pokemonList.map((pokemon) =>
+              pokemon.name === item.name
                 ? {
                     ...pokemon,
                     isLoadingDetails: false,
